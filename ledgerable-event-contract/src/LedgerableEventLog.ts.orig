@@ -20,15 +20,3 @@ export class LedgerableEventLogEntry {
     @Property()
     public dataHash: string;
 }
-
-@DataType()
-export class LedgerableEvent {
-    @Property()
-    public eventId: string;
-
-    @Property()
-    public subId: string;
-
-    @Property('logs', 'LedgerableEventLogEntry[]')
-    public logs: LedgerableEventLogEntry[];
-}

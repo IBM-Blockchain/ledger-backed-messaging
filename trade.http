@@ -1,7 +1,25 @@
-POST http://0.0.0.0:9000/trade HTTP/1.1
+GET http://localhost:4444/v1/ledgerable/a9a40e94-036c-410c-8fd2-10921245e96d HTTP/1.1
+content-type: application/json
+
+
+###
+
+GET http://localhost:9090/v1/trades HTTP/1.1
+content-type: application/json
+a9a40e94-036c-410c-8fd2-10921245e96d
+
+###
+
+POST http://localhost:9090/v1/trader/bob/trade HTTP/1.1
 content-type: application/json
 
 {
-    "kwh":52
-    
+    "tradeId":"wiberqwerewqrble",
+    "price":19.2,
+    "qty":500
 }
+
+###
+
+GET http://localhost:9090/v1/trader/bob/trade HTTP/1.1
+content-type: application/json

@@ -14,10 +14,14 @@
     >
       <template v-slot:[`item.logs`]="{ item }">
         <ul>
-          <li v-for="l in item.logs" :key="l">
+          <li v-for="l in item.logs" :key="l.timestamp">
             <h3>{{ l.type }}</h3>
-            [{{ l.timestamp }}]
+            <p>
+            [{{ l.timestamp | fromMilliSeconds }}]
+            
             {{ l.dataHash }}
+            </p>
+
           </li>
         </ul>
       </template>
@@ -28,7 +32,7 @@
 <script>
 import axios from "axios";
 
-const APIHOST = "http://172.20.105.165:4444/v1";
+const APIHOST = "https://localhost/api/ledger";
 export default {
   name: "LedgerableEventView",
 
@@ -59,8 +63,8 @@ export default {
     readDataFromAPI() {
       this.loading = true;
       let trade = this.$route.params.id;
-      axios.get(`${APIHOST}/ledgerable/event/${trade}`).then((response) => {
-        console.log(response);
+      axios.get(`${APIHOST}/event/${trade}`).then((response) => {
+        console.log(response.data);
         this.loading = false;
         this.ledgerables = response.data;
         this.numberOfPages = 1;
@@ -70,5 +74,11 @@ export default {
   mounted() {
     this.readDataFromAPI();
   },
+  filters: {
+    fromMilliSeconds(t){
+      console.log(t)
+      return new Date(t*1000).toString()
+    }
+  }
 };
 </script>

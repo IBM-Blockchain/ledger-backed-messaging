@@ -17,7 +17,7 @@ import org.ampretia.model.TradeMessage;
 import org.ampretia.model.Trader;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-@Path("v1/trader")
+@Path("/trader/")
 public class TraderResource {
 
     private static final Logger LOGGER = Logger.getLogger(Trader.class.getName());
@@ -34,7 +34,7 @@ public class TraderResource {
         return traderService.submitTrade(traderId, newOffer);
     }
 
-    @Path("{traderId}/trade/${tradeId}")
+    @Path("{traderId}/trade/{tradeId}")
     @GET
     @Produces("application/json")
     public Trade getTrade(@PathParam String traderId, @PathParam String tradeId) {

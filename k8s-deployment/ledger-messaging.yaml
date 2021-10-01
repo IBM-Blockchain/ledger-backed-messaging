@@ -1,0 +1,116 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-fabric-v1-map
+data:
+  fabric_channel: mychannel
+  fabric_contract: ledgerable-event-contract
+  fabric_wallet_dir: /fabric/application/wallet
+  fabric_gateway_hostport: org1-peer1:7051
+  fabric_gateway_sslHostOverride: org1-peer1
+  fabric_gateway_tlsCertPath: /fabric/tlscacerts/org1-tls-ca.pem
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-mq-v1-map
+data:
+  mq.host: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  mq.port: '30756'
+  mq.channel: CLOUD.APP2.SVRCONN
+  mq.app.password: xxxxxx
+  mq.app.user: ledgermsg
+  mq.qm: mqfab
+  mq.trade.offer.queue: queue:///DEV.QUEUE.2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-quarkus-v1-map
+data:
+  quarkus_http_port: '4444'
+  quarkus_http_host: '0.0.0.0'
+  quarkus_http_cors: 'true'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger-messaging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ledger-messaging
+  template:
+    metadata:
+      labels:
+        app: ledger-messaging
+    spec:
+      containers:
+        - name: main
+          image: localhost:5000/ledgermessaging:latest
+          imagePullPolicy: Always 
+          envFrom:
+            - configMapRef:
+                name: app-fabric-v1-map
+            - configMapRef:
+                name: app-mq-v1-map
+            - configMapRef:
+                name: app-quarkus-v1-map
+            - configMapRef:
+                name: app-fabric-org1-v1-map
+          ports:
+            - containerPort: 4444
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "0.1"
+          volumeMounts:
+            - name: fabricids
+              mountPath: /fabric/application/wallet
+            - name: tlscerts
+              mountPath: /fabric/tlscacerts
+      volumes:
+        - name: fabricids
+          configMap:
+            name: app-fabric-ids-v1-map
+        - name: tlscerts
+          configMap:
+            name: app-fabric-tls-v1-map
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger-messaging
+spec:
+  ports:
+    - name: http
+      port: 4444
+      protocol: TCP
+  selector:
+    app: ledger-messaging
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ledger-messaging
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - http:
+        paths:
+          - path: "/api/ledger/(.*)"
+            pathType: Prefix
+            backend:
+              service:
+                name: ledger-messaging
+                port:
+                  number: 4444

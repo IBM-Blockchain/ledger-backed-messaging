@@ -17,7 +17,8 @@ import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.JMSProducer;
 import javax.jms.MessageListener;
-
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.msg.client.jms.JmsConnectionFactory;
 import com.ibm.msg.client.jms.JmsFactoryFactory;
@@ -59,7 +60,9 @@ public class LedgerStore implements ExceptionListener, MessageListener {
     Destination destination = null;
     final JMSProducer producer = null;
     JMSConsumer consumer = null; // to and from
+    JMSConsumer consumer2 = null; // to and from
     JMSContext context;
+    JMSContext context2;
 
     // Inject the service factory to connect you to Fabric Contracts
     @Inject
@@ -101,17 +104,25 @@ public class LedgerStore implements ExceptionListener, MessageListener {
             LOGGER.info("Connecting to qm...");
 
             context = cf.createContext(JMSContext.SESSION_TRANSACTED);
-
             context.setExceptionListener(this);
             destination = context.createQueue(LEDGER_ACTIONS);
-
             consumer = context.createConsumer(destination); // autoclosable
             consumer.setMessageListener(this);
             context.start();
+
+            // context2 = cf.createContext(JMSContext.SESSION_TRANSACTED);
+            // context2.setExceptionListener(this);
+            // destination = context2.createQueue(LEDGER_ACTIONS);
+            // consumer2 = context2.createConsumer(destination); // autoclosable
+            // consumer2.setMessageListener(this);
+            // context2.start();
+
+
             LOGGER.info("Started consumer... all messages will come here");
         } catch (final JMSException jmsex) {
             processJMSException(jmsex);
             context.stop();
+            context2.stop();
             Quarkus.asyncExit();
             throw new RuntimeException("Failued to handle error");
         }
@@ -126,15 +137,14 @@ public class LedgerStore implements ExceptionListener, MessageListener {
     @Override
     public void onMessage(final javax.jms.Message message) {
         try {
-            LOGGER.info("onMesage got message from MQ");
-            //MQFB_COD
-            //MQFB_COA
+            LOGGER.info("[onMessage] >>");
+
             String event;
             int feedback = message.getIntProperty(WMQConstants.JMS_IBM_FEEDBACK);
             if (feedback==CMQC.MQFB_COA){
-                event="ARRVIED";
+                event="ARRIVED "+message.getJMSDestination();
             } else if (feedback==CMQC.MQFB_COD){
-                event="DELIVERED";
+                event="DELIVERED "+message.getJMSDestination();
             } else {
                 event="???";
             }
@@ -144,29 +154,36 @@ public class LedgerStore implements ExceptionListener, MessageListener {
             String timestamp = String.valueOf(message.getJMSTimestamp());
             String payload = message.getBody(String.class);
 
-            LOGGER.info("For Trade ["+tradeId+"] message ["+msgId+"] has ["+event+"] at time ["+timestamp+"] payload:["+payload+"]" );
+            Jsonb jsonb = JsonbBuilder.create();
+           
 
+            LOGGER.info("For Trade ["+tradeId+"] message ["+msgId+"] has ["+event+"] at time ["+timestamp+"] payload:["+payload+"]" );
+            TradeMessage tm = jsonb.fromJson(payload, TradeMessage.class);
             LedgerableEvent le = new LedgerableEvent();
             le.eventId = tradeId;
             le.subId = msgId;
 
             LedgerableEvent.Log l = new LedgerableEvent.Log();            
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            l.dataHash =  Base64.getEncoder().encodeToString(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
+            l.dataHash = tm.getHash();
             l.timestamp =timestamp;
-            l.type = event;
+            l.type = event ;
             le.logs = new LedgerableEvent.Log[]{ l };
 
             // User id here is for the application as a whole
             LedgerableEventService f = factory.getLedgerableService(fabricuser);
-            f.submitEvent(le);
 
-            context.commit();
+            LOGGER.info("[onMessage] submitEvent  >>");
+            f.submitEvent(le);
+            LOGGER.info("[onMessage] submitEvent  <<");
+            
+            LOGGER.info("[onMessage] <<");
         } catch (Throwable e) {
             e.printStackTrace();
+            context.stop();
             Quarkus.asyncExit(200);
             Quarkus.waitForExit();
-            throw new RuntimeException("Failed to handle error");
+        } finally {
+            context.commit();
         }
         
     }

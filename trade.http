@@ -4,6 +4,12 @@ content-type: application/json
 
 ###
 
+GET http://localhost:4444/v1/ledgerable/metadata HTTP/1.1
+content-type: application/json
+
+
+###
+
 GET http://localhost:9090/v1/trades HTTP/1.1
 content-type: application/json
 a9a40e94-036c-410c-8fd2-10921245e96d

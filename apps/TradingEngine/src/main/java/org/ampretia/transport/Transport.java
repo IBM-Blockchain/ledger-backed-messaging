@@ -3,6 +3,7 @@
 package org.ampretia.transport;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -93,15 +94,11 @@ public class Transport {
 	public Transport() {
 	}
 
-	Consumer appConsumer;
 	JMSConsumer marketConsumer;
 
 	@PostConstruct
 	public void init() {
-		// Variables
-		Destination destination = null;
-		final JMSProducer producer = null;
-		JMSConsumer consumer = null;
+
 
 		try {
 			// Create a connection factory
@@ -158,82 +155,7 @@ public class Transport {
 		context.close();
 	}
 
-	public String send(TradeMessage t) {
-		Jsonb jsonb = JsonbBuilder.create();
-		String s = jsonb.toJson(t);
-		Queue q = this.context.createQueue(TRADE_OFFER_Q);
-		LOGGER.info("++++++ sending offer as " + s);
-		TextMessage msg = this.context.createTextMessage(s);
-		try {
-			msg.setIntProperty("JMS_IBM_Report_COA", CMQC.MQRO_COA_WITH_DATA);
-			msg.setIntProperty("JMS_IBM_Report_COD", CMQC.MQRO_COD_WITH_DATA);
-
-			msg.setJMSReplyTo(context.createQueue("queue:///LEDGER.ACTION"));
-			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_MSG_ID, CMQC.MQRO_PASS_MSG_ID);
-			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_CORREL_ID, CMQC.MQRO_PASS_CORREL_ID);
-			msg.setStringProperty("TRADE_ID", t.tradeId);
-			context.createProducer().send(q, msg);
-			this.context.commit();
-
-			String msgId = msg.getJMSMessageID();
-			t.setMsgId(msgId);
-			return msgId;
-		} catch (JMSException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public String sendResponse(TradeMessage t) {
-		Jsonb jsonb = JsonbBuilder.create();
-		String s = jsonb.toJson(t);
-		Queue q = this.context.createQueue(TRADE_RESPONSE_Q);
-
-		TextMessage msg = this.context.createTextMessage(s);
-		try {
-			msg.setIntProperty("JMS_IBM_Report_COA", CMQC.MQRO_COA_WITH_DATA);
-			msg.setIntProperty("JMS_IBM_Report_COD", CMQC.MQRO_COD_WITH_DATA);
-
-			msg.setJMSReplyTo(context.createQueue("queue:///LEDGER.ACTION"));
-			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_MSG_ID, CMQC.MQRO_PASS_MSG_ID);
-			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_CORREL_ID, CMQC.MQRO_PASS_CORREL_ID);
-			msg.setStringProperty("TRADE_ID", t.tradeId);
-			msg.setJMSCorrelationID(t.tradeId);
-			context.createProducer().send(q, msg);
-			this.context.commit();
-
-			String msgId = msg.getJMSMessageID();
-			t.setMsgId(msgId);
-			return msgId;
-		} catch (JMSException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void setOfferQueueConsumer(Consumer<TradeMessage> market) {
-		// autoclosable
-		marketConsumer.setMessageListener(new MessageListener() {
-
-			@Override
-			public void onMessage(final Message message) {
-				String json;
-				try {
-					LOGGER.info(message.toString());
-					json = message.getBody(String.class);
-					Jsonb jsonb = JsonbBuilder.create();
-					TradeMessage tm = jsonb.fromJson(json, TradeMessage.class);
-					tm.setMsgId(message.getJMSMessageID());
-					market.accept(tm);
-					context.commit();
-				} catch (JMSException e) {
-					throw new RuntimeException(e);
-				}
-
-			}
-
-		});
-	}
-
-	public TradeMessage getResponse(String tradeId) {
+	public TradeMessage getTraderResponse(String tradeId) {
 		TradeMessage responseMsg = null;
 		try {
 			String messageSelector = "JMSCorrelationID='" + tradeId + "'";
@@ -254,6 +176,99 @@ public class Transport {
 		}
 		return responseMsg;
 	}
+
+	public String sendTraderOffer(TradeMessage t) {
+		Jsonb jsonb = JsonbBuilder.create();
+		String s = jsonb.toJson(t);
+		Queue q = this.context.createQueue(TRADE_OFFER_Q);
+		LOGGER.info("Trader sending offer as " + s);
+
+		TextMessage msg = this.context.createTextMessage(s);
+		try {
+			msg.setIntProperty("JMS_IBM_Report_COA", CMQC.MQRO_COA_WITH_FULL_DATA);
+			msg.setIntProperty("JMS_IBM_Report_COD", CMQC.MQRO_COD_WITH_FULL_DATA);
+
+			msg.setJMSReplyTo(context.createQueue("queue:///LEDGER.ACTION"));
+			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_MSG_ID, CMQC.MQRO_PASS_MSG_ID);
+			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_CORREL_ID, CMQC.MQRO_PASS_CORREL_ID);
+			msg.setStringProperty("TRADE_ID", t.tradeId);
+			msg.setStringProperty("TRADE_MSG_TYPE",t.type.toString());
+			context.createProducer().send(q, msg);
+			
+			// this shouldn't be here... it should include adding to the internal datastructure
+			this.context.commit();
+
+			String msgId = msg.getJMSMessageID();
+			t.setMsgId(msgId);
+			return msgId;
+		} catch (JMSException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	// Market messaging
+	public String sendMarketResponse(TradeMessage t) {
+		Jsonb jsonb = JsonbBuilder.create();
+		String s = jsonb.toJson(t);
+		Queue q = this.marketContext.createQueue(TRADE_RESPONSE_Q);
+		LOGGER.info("Market sending response as " + s);
+		TextMessage msg = this.context.createTextMessage(s);
+		try {
+			msg.setIntProperty("JMS_IBM_Report_COA", CMQC.MQRO_COA_WITH_FULL_DATA);
+			msg.setIntProperty("JMS_IBM_Report_COD", CMQC.MQRO_COD_WITH_FULL_DATA);
+
+			msg.setJMSReplyTo(marketContext.createQueue("queue:///LEDGER.ACTION"));
+			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_MSG_ID, CMQC.MQRO_PASS_MSG_ID);
+			msg.setIntProperty(WMQConstants.JMS_IBM_REPORT_PASS_CORREL_ID, CMQC.MQRO_PASS_CORREL_ID);
+			msg.setStringProperty("TRADE_ID", t.tradeId);
+			msg.setStringProperty("TRADE_MSG_TYPE","RESPONSE MESSAGE");
+			msg.setJMSCorrelationID(t.tradeId);
+			marketContext.createProducer().send(q, msg);
+			marketContext.commit();
+
+			String msgId = msg.getJMSMessageID();
+			t.setMsgId(msgId);
+			return msgId;
+		} catch (JMSException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void setMarketConsumer(Function<TradeMessage,TradeMessage> market) {
+		marketConsumer.setMessageListener(new MessageListener() {
+
+			@Override
+			public void onMessage(final Message message) {
+				String json;
+				try {
+					LOGGER.info(message.toString());
+					json = message.getBody(String.class);
+					Jsonb jsonb = JsonbBuilder.create();
+					TradeMessage tm = jsonb.fromJson(json, TradeMessage.class);
+					tm.setMsgId(message.getJMSMessageID());
+					
+					
+					TradeMessage responseMessage = market.apply(tm);
+					// simulate something being not quite right, commit the incoming message and not send a response
+					if (responseMessage != null ){
+						// send the reponse
+						sendMarketResponse(responseMessage);
+					}
+
+					// let the listener commit on return
+
+				} catch (JMSException e) {
+					throw new RuntimeException(e);
+				} finally {
+					marketContext.commit();
+				}
+
+			}
+
+		});
+	}
+
+
 
 	/**
 	 * Record this run as failure.

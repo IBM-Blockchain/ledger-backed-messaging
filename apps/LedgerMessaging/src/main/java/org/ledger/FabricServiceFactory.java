@@ -23,6 +23,7 @@ import org.hyperledger.fabric.client.identity.Signer;
 import org.jboss.logging.Logger;
 import org.ledger.identity.JsonIdAdapter;
 
+import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
@@ -75,12 +76,22 @@ public class FabricServiceFactory {
                     .sslContext(GrpcSslContexts.forClient().trustManager(tlsCert).build())
                     .overrideAuthority(sslHostOverride).build();
 
+
+            ConnectivityState state = this.grpcChannel.getState(false);
+            LOG.info("grpcChannel state "+state.toString());
+            this.grpcChannel.notifyWhenStateChanged(state, () -> {
+                LOG.info("grpcChannel changed state");
+                ConnectivityState newstate =  this.grpcChannel.getState(false);
+                LOG.info(newstate.toString());
+            });
+
+            
             // setup the loading of the identities
             idWallet = new JsonIdAdapter(Paths.get(walletDir));
 
         } catch (IOException | CertificateException e) {
             LOG.error("Failed to establish the gRPC connection " + e.getMessage());
-            Quarkus.asyncExit(100);
+            Quarkus.blockingExit();
             throw new RuntimeException("Failed to establish the gRPC connection", e);
         }
 
@@ -98,13 +109,15 @@ public class FabricServiceFactory {
         }
     }
 
+    
+
     /**
      * Get the service for ledgerable contract
      * @param userid ID to use for connecting and signing
      * @return LedgerableEventService
      */
     public LedgerableEventService getLedgerableService(String userid) {
-
+        LOG.info("getLedgerableService "+userid+" >>");
         try {
             Identity id = idWallet.getIdentity(userid);
             Signer signer = idWallet.getSigner(userid);

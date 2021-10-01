@@ -7,6 +7,12 @@
   "engines": {
     "node": ">=12.16.1"
   },
+  "fabric":{
+    "files": [
+      "lib/**/*"
+    ],
+    "label":"ledgerable"
+  },
   "scripts": {
     "clean": "rimraf lib",
     "format": "prettier --write \"{src,test}/**/*.ts\"",
@@ -14,6 +20,7 @@
     "build": "npm run format && npm run clean && npm run lint && echo Using TypeScript && tsc --version && tsc --pretty && npm link",
     "start": "fabric-chaincode-node start",
     "md": "fabric-chaincode-node metadata generate",
+    "package": "npm run build && npm shrinkwrap",
     "start:server-nontls": "set -x && fabric-chaincode-node server --chaincode-address=$CHAINCODE_SERVER_ADDRESS --chaincode-id=$CHAINCODE_ID",
     "start:server": "set -x && fabric-chaincode-node server --chaincode-address=$CHAINCODE_SERVER_ADDRESS --chaincode-id=$CHAINCODE_ID --chaincode-tls-key-file=/hyperledger/privatekey.pem --chaincode-tls-client-cacert-file=/hyperledger/rootcert.pem --chaincode-tls-cert-file=/hyperledger/cert.pem"
   },
@@ -28,6 +35,7 @@
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
+    "@hyperledgendary/weftility": "^1.0.1-beta.0",
     "@types/chai": "^4.2.18",
     "@types/chai-as-promised": "^7.1.4",
     "@types/mocha": "^8.2.2",

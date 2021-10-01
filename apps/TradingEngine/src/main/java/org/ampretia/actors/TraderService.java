@@ -38,8 +38,8 @@ public class TraderService {
 
     public TradeMessage submitTrade(String traderId, TradeMessage newOffer) {
         Trade t = new Trade(traderId, newOffer.tradeId);
-        TradeMessage offer = t.createOffer().setPrice(newOffer.price).setQty(newOffer.qty);
-        transport.send(offer);
+        TradeMessage offer = t.createOffer().setPrice(newOffer.price).setQty(newOffer.qty).setDescription(newOffer.description);
+        transport.sendTraderOffer(offer);
 
         try {
             mutex.lock();
@@ -80,12 +80,16 @@ public class TraderService {
             mutex.lock();
             for (Map.Entry<String, Map<String, Trade>> entry : dataStore.entrySet()) {
                 LOGGER.info("updateTrades looking at "+entry.getKey());
-                // String traderId = entry.getKey();
+                
                 for (Map.Entry<String, Trade> tradeEntry : entry.getValue().entrySet()) {
                     Trade t = tradeEntry.getValue();
-                    if (t.responseMsg!=null){
-                        t.setResponse(transport.getResponse(tradeEntry.getKey()));
+                    LOGGER.info(entry.toString());
+                    LOGGER.info(t.toString());
+                    if (t.responseMsg==null){
+                        t.setResponse(transport.getTraderResponse(tradeEntry.getKey()));
                         LOGGER.info("updateTrades looking at "+tradeEntry.getKey());
+                    } else {
+                        LOGGER.info("already got response");
                     }
                 }
 

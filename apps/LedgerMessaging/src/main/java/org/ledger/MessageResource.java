@@ -16,7 +16,7 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 /**
  * Provides the REST endpoint for returning information on the ledgerable events
  */
-@Path("/v1/ledgerable/")
+@Path("/")
 public class MessageResource {
     private static final Logger LOGGER = Logger.getLogger(MessageResource.class.getName());
 
@@ -35,7 +35,7 @@ public class MessageResource {
 
         // userid in this case could come from the rest request
         // hard code for the moment
-        String userid = "appuser";
+        String userid = "appuser_org1";
 
         LedgerableEventService f = factory.getLedgerableService(userid);
         List<LedgerableEvent> events = f.getEvents(id);
@@ -51,7 +51,7 @@ public class MessageResource {
 
         // userid in this case could come from the rest request
         // hard code for the moment
-        String userid = "appuser";
+        String userid = "appuser_org1";
 
         LedgerableEventService f = factory.getLedgerableService(userid);
         String r = f.metadata();

@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
-package org.ampretia.model;
+package org.ledger;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import java.util.logging.Logger;
+
 import javax.json.bind.annotation.JsonbTransient;
 
-public class TradeMessage {
 
+public class TradeMessage {
+    
     public static enum TYPE {
         OFFER, RESPONSE
     };
@@ -17,7 +18,7 @@ public class TradeMessage {
     private static final Logger LOGGER = Logger.getLogger(TradeMessage.class.getName());
     /** Trade this message is part of */
     public String tradeId;
-
+    
     /** UID for this specific message */
     public String msgId;
 
@@ -33,7 +34,8 @@ public class TradeMessage {
     /** Is this a request or a response */
     public TYPE type;
 
-    public TradeMessage() {
+
+    public TradeMessage(){
 
     }
 
@@ -41,55 +43,47 @@ public class TradeMessage {
         this.tradeId = tradeId;
         this.type = type;
     }
-
-    public TradeMessage setMsgId(String msgId) {
-        this.msgId = msgId;
+    
+    public TradeMessage setMsgId(String msgId){
+        this.msgId=msgId;
         return this;
     }
 
-    public TradeMessage setPrice(int price) {
+    public TradeMessage setPrice(int price){
         this.price = price;
         return this;
     }
 
-    public TradeMessage setQty(int qty) {
+    public TradeMessage setQty(int qty){
         this.qty = qty;
         return this;
     }
 
-    public TradeMessage setDescription(String description) {
+    public TradeMessage setDescription(String description){
         this.description = description;
-        return this;
-    }
-
-    public TradeMessage setType(TYPE type) {
-        this.type = type;
         return this;
     }
 
     public String toString() {
         return "[TradeMessage] " + type + ":" + tradeId + ":" + msgId + ":" + price + ":" + description;
     }
-
-    /**
+    /** 
      * Create a hash to confirm the contents of this trade
-     * 
      * @throws NoSuchAlgorithmException
      */
     @JsonbTransient
-    public String getHash() throws NoSuchAlgorithmException {
+    public String getHash() throws NoSuchAlgorithmException{
         StringBuilder str = new StringBuilder("TradeMessage:");
         str = str.append(tradeId).append(":");
         str = str.append(type).append(":");
         str = str.append(qty).append(":");
         str = str.append(price).append(":");
         str = str.append(description).append(":");
-
+       
         String payload = str.toString();
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String dataHash = TradeMessage.bytesToHex(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
-
-        LOGGER.info("Hashing " + str + " to  " + dataHash);
+        LOGGER.info("Hashing "+str+" to  "+dataHash);
         return dataHash;
     }
 
@@ -97,7 +91,7 @@ public class TradeMessage {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
         for (int i = 0; i < hash.length; i++) {
             String hex = Integer.toHexString(0xff & hash[i]);
-            if (hex.length() == 1) {
+            if(hex.length() == 1) {
                 hexString.append('0');
             }
             hexString.append(hex);

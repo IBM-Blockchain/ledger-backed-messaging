@@ -10,7 +10,9 @@ import SubmitTradeView from './views/SubmitTradeView'
 
 import 'roboto-fontface/css/roboto/roboto-fontface.css'
 import '@mdi/font/css/materialdesignicons.css'
+import AsyncComputed from 'vue-async-computed'
 
+Vue.use(AsyncComputed)
 Vue.config.productionTip = false
 Vue.use(VueAxios, axios)
 Vue.use(VueRouter)

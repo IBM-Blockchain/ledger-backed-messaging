@@ -32,8 +32,14 @@ public class Trade {
         this.tradeOriginatorId = originator;
 
     }
+
     public TradeMessage createOffer() {
-        this.offerMsg = new TradeMessage(this.tradeId);
+        this.offerMsg = new TradeMessage(this.tradeId,TradeMessage.TYPE.OFFER);
+        return this.offerMsg;
+    }
+
+    public TradeMessage createReponse() {
+        this.offerMsg = new TradeMessage(this.tradeId,TradeMessage.TYPE.RESPONSE);
         return this.offerMsg;
     }
 
@@ -44,5 +50,9 @@ public class Trade {
 
     public String getTradeId() {
         return this.tradeId;
+    }
+
+    public String toString(){
+        return "[Trade] "+tradeId+":"+tradeOriginatorId+" [Offer] "+this.offerMsg+" [Response]"+this.responseMsg;
     }
 }

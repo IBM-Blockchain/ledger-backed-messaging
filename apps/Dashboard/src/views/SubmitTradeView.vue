@@ -71,8 +71,9 @@
 <script>
 import axios from "axios";
 import { nanoid } from "nanoid";
+import hash from '@rakered/hash';
 
-const APIHOST = "http://172.20.105.165:9090/v1";
+const APIHOST = "http://localhost/api/tradeengine";
 
 export default {
   components: {},
@@ -88,29 +89,43 @@ export default {
       loading: true,
       options: {},
       valid:true,
-      hash: "0xcafebabe",
       tradeuid: nanoid(),
     };
   },
   watch: {},
   methods: {
-    submit(e) {
+    async submit(e) {
       console.log(e)
-      // this.$router.push({ path: `/ledgerable/${e.tradeId}` });
+      let offer = { "tradeId":this.tradeuid, "price":this.value,"qty":this.qty,"description":this.select};
+
+      console.log(this.select)
+      await axios.post(`${APIHOST}/trader/bob/trade`,offer);
+      console.log(`Offer sent ${JSON.stringify(offer)}`);
+      this.$router.push({ path: `/trades` });
     },
     reset() {
       this.$refs.form.reset();
     },
-    readDataFromAPI() {
+    async readDataFromAPI() {
       this.loading = true;
-      axios.get(`${APIHOST}/trades`).then((response) => {
+      await axios.get(`${APIHOST}/trades`).then((response) => {
         this.loading = false;
         this.trades = response.data;
       });
     },
   },
   mounted() {
-    // this.readDataFromAPI();
+   
   },
+  asyncComputed: {
+     hash: async function(){
+
+        let message = `TradeMessage:${this.tradeuid}:OFFER:${this.qty}:${this.value}:${this.select}:`
+        // let hashValue = await sha256(message);
+        let { digest } = hash(message);
+        console.log(`Hashing ${message} to ${digest}`);
+        return digest;
+    }
+  }
 };
 </script>

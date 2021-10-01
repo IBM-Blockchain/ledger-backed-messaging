@@ -20,8 +20,8 @@ import io.quarkus.runtime.Quarkus;
 import java.util.logging.Logger;
 
 /**
- * Service for handling Ledgerable Events. 
- * This provides the client side view of the LedgerableEventContract
+ * Service for handling Ledgerable Events. This provides the client side view of
+ * the LedgerableEventContract
  */
 public class LedgerableEventService extends FabricService {
     private static final Logger LOGGER = Logger.getLogger(LedgerableEventService.class.getName());
@@ -55,9 +55,10 @@ public class LedgerableEventService extends FabricService {
             Network network = gateway.getNetwork(networkChannel);
             Contract contract = network.getContract(contractName);
 
+            LOGGER.info("Getting events for trade id=" + tradeId);
             byte[] result = contract.evaluateTransaction("retrieve", tradeId);
-            String json = new String(result, StandardCharsets.UTF_8);           
-            LOGGER.info("get:" + json);
+            String json = new String(result, StandardCharsets.UTF_8);
+            LOGGER.info("result:" + json);
 
             Type t = new ArrayList<LedgerableEvent>() {
             }.getClass().getGenericSuperclass();

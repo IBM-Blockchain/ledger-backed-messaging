@@ -1,0 +1,90 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trade-engine-mq-v1-map
+data:
+  mq.host: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  MQ_HOST: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  MQ_PORT: '30756'
+  MQ_CHANNEL: CLOUD.APP2.SVRCONN
+  MQ_APP_PASSWORD: x-xxxxx
+  MQ_APP_USER: ledgermsg
+  MQ_QM: mqfab
+  MQ_TRADE_OFFER_QUEUE: queue:///DEV.QUEUE.2
+  MQ_TRADE_RESPONSE_QUEUE: queue:///DEV.QUEUE.1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trade-engine-quarkus-v1-map
+data:
+  quarkus_http_port: '9090'
+  quarkus_http_host: '0.0.0.0'
+  quarkus_http_cors: 'true'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trade-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  trade-engine
+  template:
+    metadata:
+      labels:
+        app: trade-engine
+    spec:
+      containers:
+        - name: main
+          image: localhost:5000/tradeengine:latest
+          imagePullPolicy: Always 
+          envFrom:
+            - configMapRef:
+                name: trade-engine-mq-v1-map
+            - configMapRef:
+                name: trade-engine-quarkus-v1-map
+          ports:
+            - containerPort: 9090
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "0.1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trade-engine
+spec:
+  ports:
+    - name: http
+      port: 9090
+      protocol: TCP
+  selector:
+    app: trade-engine
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trade-engine
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - http:
+        paths:
+          - path: "/api/tradeengine/(.*)"
+            pathType: Prefix
+            backend:
+              service:
+                name: trade-engine
+                port:
+                  number: 9090

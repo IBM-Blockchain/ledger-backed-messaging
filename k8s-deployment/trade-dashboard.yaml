@@ -1,0 +1,60 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trade-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  trade-dashboard
+  template:
+    metadata:
+      labels:
+        app: trade-dashboard
+    spec:
+      containers:
+        - name: main
+          image: localhost:5000/trade-dashboard:latest
+          imagePullPolicy: Always 
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "0.1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trade-dashboard
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+  selector:
+    app: trade-dashboard
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trade-dashboard
+#  annotations:
+#    nginx.ingress.kubernetes.io/app-root: /fabric
+spec:
+  rules:
+    - http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: trade-dashboard
+                port:
+                  number: 80

@@ -22,7 +22,7 @@
 <script>
 import axios from "axios";
 
-const APIHOST = "http://172.20.105.165:9090/v1";
+const APIHOST = "http://localhost/api/tradeengine";
 
 export default {
   components: {},
@@ -35,6 +35,7 @@ export default {
       options: {},
       headers: [
         { text: "TradeId", value: "tradeId" },
+        { text: "Description", value: "offerMsg.description" },
         { text: "Offer Price", value: "offerMsg.price" },
         { text: "Offer Qty", value: "offerMsg.qty" },
                 { text: "Actual Price", value: "responseMsg.price" },

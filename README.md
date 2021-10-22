@@ -2,6 +2,8 @@
 
 An investigation is using Hyperledger Fabric to store confirmation report messages from [IBM MQ](https://www.ibm.com/uk-en/products/mq) on the ledger.
 
+For more information on the scenario keep reading, [setup information](./SETUP.md) is available.
+
 ## Scenario
 
 The scenario is based around a 'Trader' submitting a 'TradeOffer' saying for example they are offering to supply 300 pineapples for 45.0 unit price. This offer is submitted to a market, which responds with if the offer is accepted or not (and what price the market is willing to pay).

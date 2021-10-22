@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-mq-v1-map
+data:
+  mq.host: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  mq.port: '30756'
+  mq.channel: CLOUD.APP2.SVRCONN
+  mq.app.password: xxxxx
+  mq.app.user: ledgermsg
+  mq.qm: mqfab
+  mq.trade.offer.queue: queue:///DEV.QUEUE.2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trade-engine-mq-v1-map
+data:
+  mq.host: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  MQ_HOST: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
+  MQ_PORT: '30756'
+  MQ_CHANNEL: CLOUD.APP2.SVRCONN
+  MQ_APP_PASSWORD: xxxxxx
+  MQ_APP_USER: ledgermsg
+  MQ_QM: mqfab
+  MQ_TRADE_OFFER_QUEUE: queue:///DEV.QUEUE.2
+  MQ_TRADE_RESPONSE_QUEUE: queue:///DEV.QUEUE.1

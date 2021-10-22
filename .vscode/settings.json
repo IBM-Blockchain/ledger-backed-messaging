@@ -2,5 +2,11 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "cSpell.words": [
         "Ledgerable"
-    ]
+    ],
+    "markdownlint.config": {
+        "MD028": false,
+        "MD025": {
+            "front_matter_title": ""
+        }
+    }
 }

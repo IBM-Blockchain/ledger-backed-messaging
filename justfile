@@ -17,6 +17,7 @@ docker:
 	docker push {{docker_registry}}/tradeengine:latest
 
 k8s:
+	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/mq-config-map.yaml
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/trade-dashboard.yaml
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/trade-engine.yaml
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/ledger-messaging.yaml

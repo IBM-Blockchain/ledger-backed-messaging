@@ -20,7 +20,7 @@ dependencies {
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
     implementation 'com.ibm.mq:com.ibm.mq.allclient:9.2.0.0'
-    implementation 'org.hyperledger.fabric:fabric-gateway:0.1.0-dev-20210729-14'
+    implementation 'org.hyperledger.fabric:fabric-gateway:0.1.0-dev-20211021-4'
 }
 
 group 'my-groupId'

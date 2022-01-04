@@ -29,3 +29,8 @@ content-type: application/json
 
 GET http://localhost:9090/v1/trader/bob/trade HTTP/1.1
 content-type: application/json
+
+###
+
+GET http://localhost/api/ledger/metadata" HTTP/1.1
+content-type: application/json

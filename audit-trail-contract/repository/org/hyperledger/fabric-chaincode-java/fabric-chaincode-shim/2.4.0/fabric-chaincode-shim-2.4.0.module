@@ -1,0 +1,241 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.hyperledger.fabric-chaincode-java",
+    "module": "fabric-chaincode-shim",
+    "version": "2.4.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.1.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-shim-2.4.0.jar",
+          "url": "fabric-chaincode-shim-2.4.0.jar",
+          "size": 176014,
+          "sha512": "cc8197175eb3078799d8918a04bb90edc3c62504ab411d215f278ab10359a7761b382f4c89af79e4f1ad0e9a18ce0dbf78a9bdbd0a7c65af41f38b52eead042f",
+          "sha256": "d5c4fcb1631d784ad83556f97a21aa7c317b8f8f5ba64f20bfaaccab643b47cc",
+          "sha1": "b17313e24ecd21df6f86cfbcba1135f5797c4094",
+          "md5": "93b81a6f4b4c2570234122b11ce6b068"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "commons-cli",
+          "module": "commons-cli",
+          "version": {
+            "requires": "1.4"
+          }
+        },
+        {
+          "group": "commons-logging",
+          "module": "commons-logging",
+          "version": {
+            "requires": "1.2"
+          }
+        },
+        {
+          "group": "org.hyperledger.fabric-chaincode-java",
+          "module": "fabric-chaincode-protos",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcpkix-jdk15on",
+          "version": {
+            "requires": "1.62"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk15on",
+          "version": {
+            "requires": "1.62"
+          }
+        },
+        {
+          "group": "io.github.classgraph",
+          "module": "classgraph",
+          "version": {
+            "requires": "4.8.47"
+          }
+        },
+        {
+          "group": "com.github.everit-org.json-schema",
+          "module": "org.everit.json.schema",
+          "version": {
+            "requires": "1.12.1"
+          }
+        },
+        {
+          "group": "org.json",
+          "module": "json",
+          "version": {
+            "requires": "20180813"
+          }
+        },
+        {
+          "group": "com.google.protobuf",
+          "module": "protobuf-java-util",
+          "version": {
+            "requires": "3.11.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-netty-shaded",
+          "version": {
+            "requires": "1.34.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-protobuf",
+          "version": {
+            "requires": "1.34.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-stub",
+          "version": {
+            "requires": "1.34.1"
+          }
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-bom",
+          "version": {
+            "requires": "1.6.0"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-api"
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-proto",
+          "version": {
+            "requires": "1.6.0-alpha"
+          }
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-sdk"
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-sdk-extension-autoconfigure",
+          "version": {
+            "requires": "1.6.0-alpha"
+          }
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-sdk-trace"
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-exporter-otlp"
+        },
+        {
+          "group": "io.opentelemetry",
+          "module": "opentelemetry-extension-trace-propagators",
+          "version": {
+            "requires": "1.6.0"
+          }
+        },
+        {
+          "group": "io.opentelemetry.instrumentation",
+          "module": "opentelemetry-grpc-1.6",
+          "version": {
+            "requires": "1.5.3-alpha"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "fabric-chaincode-shim-2.4.0.jar",
+          "url": "fabric-chaincode-shim-2.4.0.jar",
+          "size": 176014,
+          "sha512": "cc8197175eb3078799d8918a04bb90edc3c62504ab411d215f278ab10359a7761b382f4c89af79e4f1ad0e9a18ce0dbf78a9bdbd0a7c65af41f38b52eead042f",
+          "sha256": "d5c4fcb1631d784ad83556f97a21aa7c317b8f8f5ba64f20bfaaccab643b47cc",
+          "sha1": "b17313e24ecd21df6f86cfbcba1135f5797c4094",
+          "md5": "93b81a6f4b4c2570234122b11ce6b068"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-shim-2.4.0-javadoc.jar",
+          "url": "fabric-chaincode-shim-2.4.0-javadoc.jar",
+          "size": 572526,
+          "sha512": "7eddf178fc2450832726bfb3c063692cf1e86f8fdb5e47ae7f13e0d32e9dd04226d2be09b91b5fb83243daffbe52cc10e7fa6795c383dbdd89376b64fea652e2",
+          "sha256": "ab3fc5cc693b33bf7d8392ea6d55bd8c20b621e65058de7708d5cec2c628a570",
+          "sha1": "07ad1016be2e5be80acfc5f8e8235b1c037dec53",
+          "md5": "30f5effb36009027e81ecd09abbc78de"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-shim-2.4.0-sources.jar",
+          "url": "fabric-chaincode-shim-2.4.0-sources.jar",
+          "size": 237320,
+          "sha512": "b8cb70910be20b0805cbd660b65e0e02d042b2edb00d140c3df05edf89857f05d364c862983f11468583fc160dfc80594ff6e0a6c1b8ac0d9c9065ba3b0cf505",
+          "sha256": "895cf1f7b477344145fec1aafaf4f367ccda17b33feb681c6aa09ad9bd8beabf",
+          "sha1": "b7807e2f3037752461876bfaf5818028accb26b1",
+          "md5": "d5c6611da76196383640da338a27a9f7"
+        }
+      ]
+    }
+  ]
+}

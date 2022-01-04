@@ -5,12 +5,12 @@ package org.ledgerable.events;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -26,8 +26,11 @@ import org.hyperledger.fabric.client.Status;
 import org.hyperledger.fabric.client.SubmittedTransaction;
 import org.hyperledger.fabric.client.Transaction;
 import org.hyperledger.fabric.protos.peer.TransactionPackage.TxValidationCode;
+import org.ledgerable.adts.LedgerableChaincodeEvent;
 import org.ledgerable.adts.LedgerableEvent;
 import org.ledgerable.fabric.FabricService;
+import org.ledgerable.fabric.FabricServiceException;
+import org.ledgerable.fabric.FabricServiceException.Reason;
 import org.ledgerable.fabric.TxRequestStore;
 
 import io.quarkus.runtime.Quarkus;
@@ -37,34 +40,35 @@ import io.quarkus.runtime.Quarkus;
  * Service for handling Ledgerable Events. This provides the client side view of
  * the LedgerableEventContract
  */
-public class LedgerableEventService extends FabricService {
+public class LedgerableEventService extends FabricService implements Consumer<ChaincodeEvent> {
     private static final Logger LOGGER = Logger.getLogger(LedgerableEventService.class.getName());
 
     public LedgerableEventService(TxRequestStore txStore, ExecutorService executor) {
         super(txStore, executor);
-
     }
     /** Submit via async means, the transaction */
     public void _submit(Supplier<Proposal> pbSupplier, String txRequestId) {
         try {
-            LOGGER.info("Submitting for " + txRequestId);
+            LOGGER.info("Submitting=" + txRequestId);
             // get the proposal needed
             Proposal proposal = pbSupplier.get();
             // endorse from the Peers
             Transaction tx = proposal.endorse();
 
-            LOGGER.info("Endorsed for " + txRequestId + " FabriTx=" + proposal.getTransactionId());
+            LOGGER.info("Endorsed=" + txRequestId + " FabricTxId=" + proposal.getTransactionId());
 
             // keep track of the transaction id, indexed under the applications request id
             txStore.updateTxValidationCode(txRequestId, tx.getTransactionId(), Optional.empty());
 
             CompletableFuture.supplyAsync(() -> {
-                LOGGER.info("AsyncSubmit for " + tx.getTransactionId());
+                
                 SubmittedTransaction submittedTx = tx.submitAsync();
-                submittedTx.getStatus();
+                LOGGER.info("[AsyncSubmit] submitted for FabricTxId=" + tx.getTransactionId());
+                Status s1 = submittedTx.getStatus();
+                LOGGER.info("[AsyncSubmit] getStatus returned with "+s1.toString());
                 return submittedTx;
             }, this.executor).thenApply(submittedTx -> {
-                LOGGER.info("GetStatus for " + tx.getTransactionId());
+                LOGGER.info("[AsyncSubmit] GetStatus for " + tx.getTransactionId());
                 String tx_id = submittedTx.getTransactionId();
                 Status status = submittedTx.getStatus();
                 TxValidationCode txcode = status.getCode();
@@ -73,17 +77,17 @@ public class LedgerableEventService extends FabricService {
                 if (status.isSuccessful()) {
                     byte[] result = submittedTx.getResult();
                     this.txStore.updateFinalResult(txRequestId, result);
-                    LOGGER.info("=========================== Final result for  " + txRequestId + " under fabric tx="
+                    LOGGER.info("[AsyncSubmit] FinalResult for " + txRequestId + " FabricTxId="
                             + tx_id);
                     return false;
                 } else {
                     // Set to resubmit the tx if there's a MVCC conflict
                     if (txcode.equals(TxValidationCode.MVCC_READ_CONFLICT)) {
-                        LOGGER.warning("Got a MVCC Conflict on txid, resubmitting=" + tx_id);
+                        LOGGER.warning("[AsyncSubmit] Got a MVCC Conflict on txid, resubmitting=" + tx_id);
                         return true;
 
                     } else {
-                        LOGGER.warning("Something else failed " + status.toString());
+                        LOGGER.warning("[AsyncSubmit] Something else failed " + status.toString());
                         return false; // need to abort
                     }
 
@@ -92,7 +96,7 @@ public class LedgerableEventService extends FabricService {
             }).thenAccept(action -> {
                 // if the action is to resubmit, call _submit
                 if (action) {
-                    LOGGER.info("Resubmititng " + txRequestId + " FabriTx=" + proposal.getTransactionId());
+                    LOGGER.info("[AsyncSubmit] Resubmititng " + txRequestId + " FabricTxId=" + proposal.getTransactionId());
                     _submit(pbSupplier, txRequestId);
                 }
             });
@@ -103,7 +107,7 @@ public class LedgerableEventService extends FabricService {
     }
 
     public String submitEventAsync(LedgerableEvent le) {
-        final String txRequestId = UUID.randomUUID().toString();
+        final String txRequestId = "AppReqId::"+UUID.randomUUID().toString();
         try (Gateway gateway = builder.connect()) {
 
             Network network = gateway.getNetwork(networkChannel);
@@ -115,7 +119,7 @@ public class LedgerableEventService extends FabricService {
             LOGGER.info("submit: " + json);
             this.txStore.addTx(txRequestId);
 
-            Supplier<Proposal> pbSupplier = () -> contract.newProposal("create").addArguments(json).build();
+            Supplier<Proposal> pbSupplier = () -> contract.newProposal("create").addArguments(json).putTransient("AppReqId",txRequestId).build();
             this._submit(pbSupplier, txRequestId);
 
         } catch (Throwable e) {
@@ -128,7 +132,7 @@ public class LedgerableEventService extends FabricService {
     }
 
 
-    public String submitEventSync(LedgerableEvent le) {
+    public String submitEventSync(LedgerableEvent le) throws FabricServiceException{
         try (Gateway gateway = builder.connect()) {
 
             Network network = gateway.getNetwork(networkChannel);
@@ -140,7 +144,12 @@ public class LedgerableEventService extends FabricService {
 
             byte[] result = contract.submitTransaction("create", json);
 
-            return "sync";
+            return new String(result);
+        } catch ( io.grpc.StatusRuntimeException grpc){
+            LOGGER.severe("Failed to getEvents" + grpc.getMessage());
+            processException(grpc);
+            throw (FabricServiceException) new FabricServiceException("Submit failed",Reason.GRPC,false).initCause(grpc);
+        
         } catch (Throwable t) {
             LOGGER.severe("Failed to getEvents" + t.getMessage());
             processException(t);
@@ -177,30 +186,16 @@ public class LedgerableEventService extends FabricService {
         }
 
     }
-    public void fabricChaincodeEvents() {
-        try (Gateway gateway = builder.connect()) {
+    @Override
+    public void accept(ChaincodeEvent t) {
+       Jsonb jsonb= JsonbBuilder.create();
+       LedgerableChaincodeEvent lce = jsonb.fromJson(new String(t.getPayload()),LedgerableChaincodeEvent.class);
+       this.txStore.addEvent(lce);
+       LOGGER.info("Added event for "+lce.appReqId);
+    }
 
-            Network network = gateway.getNetwork(networkChannel);
-            // Contract contract = network.getContract(contractName);
-            LOGGER.info("**** Getting chaincode events from Fabric");
-            Iterator<ChaincodeEvent> it = network.getChaincodeEvents(contractName);
 
-            while (it.hasNext()) {
-                ChaincodeEvent cce = it.next();
-                String chaincodeName = cce.getChaincodeName();
-                String eventName = cce.getEventName();
-                String txId = cce.getTransactionId();
-                long blockId = cce.getBlockNumber();
-                String payload = new String(cce.getPayload());
-                LOGGER.info("**** " + chaincodeName + " " + eventName + "[" + txId + "] " + blockId + " " + payload);
-            }
-            ;
-
-            LOGGER.info("***** End of Chaincode Event processing");
-        } catch (Throwable t) {
-            LOGGER.severe("Failed to getEvents" + t.getMessage());
-            processException(t);
-
-        }
+    public void startEvents(){
+        super.startEvents(this);
     }
 }

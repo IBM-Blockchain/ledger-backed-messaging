@@ -3,18 +3,24 @@
 package org.ledgerable.fabric;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.hyperledger.fabric.client.ChaincodeEvent;
+import org.hyperledger.fabric.client.CommitException;
 import org.hyperledger.fabric.client.Contract;
 import org.hyperledger.fabric.client.Gateway;
 import org.hyperledger.fabric.client.Network;
 import org.hyperledger.fabric.protos.gateway.ErrorDetail;
 
+import io.grpc.StatusRuntimeException;
 import io.grpc.protobuf.StatusProto;
+
 /**
  * Abstract class that provides support for defining 'services' A service should
  * provide a client endpoint for a given contract
@@ -28,6 +34,7 @@ public class FabricService {
 
     protected TxRequestStore txStore;
     protected ExecutorService executor;
+    protected ChaincodeEventProcessor cep;
 
     public FabricService(TxRequestStore tStore, ExecutorService executor) {
         this.txStore = tStore;
@@ -49,6 +56,16 @@ public class FabricService {
         return this;
     }
 
+    public void startEvents(Consumer<ChaincodeEvent> c){
+       cep= ChaincodeEventProcessor.getChaincodeEventProcessor(this.builder, this.networkChannel, contractName);
+       cep.addConsumer(c);
+       cep.start();
+    }
+
+    public void stopEvents(){
+        this.cep.stop();
+     }
+
     public String metadata() {
         try (Gateway gateway = builder.connect()) {
 
@@ -67,34 +84,75 @@ public class FabricService {
 
     }
 
+    public String evaluate(String txName, String value) {
+        try (Gateway gateway = builder.connect()) {
+
+            Network network = gateway.getNetwork(networkChannel);
+            Contract contract = network.getContract(contractName);
+
+            byte[] result = contract.evaluateTransaction(txName, value);
+            String json = new String(result, StandardCharsets.UTF_8);
+            LOGGER.info("No error detected: response is :" + json + ":");
+
+            return json;
+        } catch (Throwable t) {
+            processException(t);
+            return t.getMessage();
+        }
+
+    }
+
+    public String submit(String txName, String... value) {
+        try (Gateway gateway = builder.connect()) {
+
+            Network network = gateway.getNetwork(networkChannel);
+            Contract contract = network.getContract(contractName);
+
+            byte[] result = contract.submitTransaction(txName, value);
+            String json = new String(result, StandardCharsets.UTF_8);
+            LOGGER.info("No error detected: response is :" + json + ":");
+
+            return json;
+        } catch (Throwable t) {
+            processException(t);
+            return t.getMessage();
+        }
+
+    }
+
     protected void processException(final Throwable ex) {
         LOGGER.info(_processException(ex, 1));
     }
 
     protected String _processException(final Throwable ex, int depth) {
         StringBuilder builder = new StringBuilder(System.lineSeparator());
-        builder.append("=".repeat(depth)).append(" Class      ::" + ex.getClass()).append(System.lineSeparator());
-        builder.append("=".repeat(depth)).append(" Message    ::" + ex.getMessage()).append(System.lineSeparator());
-        builder.append("=".repeat(depth)).append(" Suppressed ::" + ex.getSuppressed().length)
-                .append(System.lineSeparator());
-        ;
-        // builder.append("=".repeat(depth)).append("----------------------------------------")
-        // .append(System.lineSeparator());
-        if (ex instanceof io.grpc.StatusRuntimeException) {
-            builder.append("=".repeat(depth))
-                    .append("Status     ::" + ((io.grpc.StatusRuntimeException) ex).getStatus())
+        builder.append("=".repeat(depth)).append("Class      ::" + ex.getClass()).append(System.lineSeparator());
+        builder.append("=".repeat(depth)).append("Message    ::" + ex.getMessage()).append(System.lineSeparator());
+        builder.append("=".repeat(depth)).append("Stack ::");
+        for (StackTraceElement ste : Arrays.asList(ex.getStackTrace())) {
+            builder.append("=".repeat(depth)).append(ste.toString()).append(System.lineSeparator());
+        };
+        
+        
+        if (ex instanceof CommitException) {
+            CommitException commitE = (CommitException) ex;
+            builder.append("=".repeat(depth)).append("CommitCode    ::" + commitE.getCode().toString());
+        } else if (ex instanceof io.grpc.StatusRuntimeException) {
+            StatusRuntimeException sre = (StatusRuntimeException) ex;
+            builder.append("=".repeat(depth)).append("StatusDescription    ::" + sre.getStatus().getDescription())
                     .append(System.lineSeparator());
-            ;
-            builder.append("=".repeat(depth))
-                    .append("Metadata   ::" + ((io.grpc.StatusRuntimeException) ex).getTrailers())
+
+            builder.append("=".repeat(depth)).append("StatusCode    ::" + sre.getStatus().getCode())
+                    .append(System.lineSeparator());
+
+            builder.append("=".repeat(depth)).append("Metadata   ::" + sre.getTrailers())
                     .append(System.lineSeparator());
         }
         com.google.rpc.Status status = StatusProto.fromThrowable(ex);
-
         if (status != null) {
             for (Any any : status.getDetailsList()) {
                 try {
-                    
+
                     ErrorDetail ee = ErrorDetail.parseFrom(any.getValue());
                     if (ee != null) {
                         builder.append("=".repeat(depth)).append(ee.getMspId()).append(System.lineSeparator());
@@ -117,6 +175,8 @@ public class FabricService {
             builder.append("=".repeat(depth - 1)).append("Cause      ::").append(_processException(cause, depth))
                     .append(System.lineSeparator());
         }
+
+
 
         return builder.toString();
     }

@@ -12,8 +12,8 @@ data:
   fabric_channel: mychannel
   fabric_contract: ledgerable-event-contract
   fabric_wallet_dir: /fabric/application/wallet
-  fabric_gateway_hostport: org1-peer1:7051
-  fabric_gateway_sslHostOverride: org1-peer1
+  fabric_gateway_hostport: org1-gateway:7051
+  fabric_gateway_sslHostOverride: org1-gateway
   fabric_gateway_tlsCertPath: /fabric/tlscacerts/org1-tls-ca.pem
 
 ---
@@ -25,6 +25,7 @@ data:
   quarkus_http_port: '4444'
   quarkus_http_host: '0.0.0.0'
   quarkus_http_cors: 'true'
+  quarkus_mongodb_connection-string: mongodb://adminuser:password123@default.mongo-nodeport-svc:27017
 
 ---
 apiVersion: apps/v1

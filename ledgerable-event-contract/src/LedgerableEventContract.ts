@@ -30,7 +30,7 @@ export class EventContract extends Contract {
     }
 
     @Transaction()
-    public async create(ctx: Context, event: LedgerableEvent): Promise<void> {
+    public async create(ctx: Context, event: LedgerableEvent): Promise<String> {
         console.log(`create::Ledgerable Event  ${JSON.stringify(event)}`);
         const key = ctx.stub.createCompositeKey(EVENT_DOMAIN_TYPE, [event.eventId, event.subId]);
 
@@ -43,8 +43,9 @@ export class EventContract extends Contract {
         // is very easy to get ledger conflicts
         const txId = ctx.stub.getTxID();
 
-        // add a double check here to ensure that the ledger has the same value as that submitted
+        const appReqId = ctx.stub.getTransient().get("AppReqId").toString();
 
+        // add a double check here to ensure that the ledger has the same value as that submitted
         if (!exists) {
             const newEvent: LedgerableEvent = JSON.parse(JSON.stringify(event));
             delete newEvent.logs;
@@ -60,6 +61,12 @@ export class EventContract extends Contract {
             const logbuffer: Buffer = Buffer.from(JSON.stringify(event.logs[i]));
             await ctx.stub.putState(keylog, logbuffer);
         }
+
+        const notification = { appReqId, eventId: event.eventId, fabricTxId: txId };
+
+        ctx.stub.setEvent('create', Buffer.from(JSON.stringify(notification)));
+
+        return txId;
     }
 
     @Transaction(false)

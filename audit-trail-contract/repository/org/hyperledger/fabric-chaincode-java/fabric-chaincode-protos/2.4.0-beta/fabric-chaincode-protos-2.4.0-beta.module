@@ -1,0 +1,158 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.hyperledger.fabric-chaincode-java",
+    "module": "fabric-chaincode-protos",
+    "version": "2.4.0-beta",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.1.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-protos-2.4.0-beta.jar",
+          "url": "fabric-chaincode-protos-2.4.0-beta.jar",
+          "size": 852875,
+          "sha512": "9aa620087154abb9a7a91b787bb5cc55a42324b36c055d8a58482c9127cc72da0a62f37a4b5d0240c6de6306162bffc9afee24ec87faa28b52dae1eb35c2c422",
+          "sha256": "616607f3ad0f42deb699c62c3c36b99798a352966827a29f260c21f3eb123746",
+          "sha1": "091e8c3635ae563b767b2bc7a25be65dac6af923",
+          "md5": "b5675357931646fbb37747c87e461ab2"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "commons-cli",
+          "module": "commons-cli",
+          "version": {
+            "requires": "1.4"
+          }
+        },
+        {
+          "group": "commons-logging",
+          "module": "commons-logging",
+          "version": {
+            "requires": "1.2"
+          }
+        },
+        {
+          "group": "com.google.protobuf",
+          "module": "protobuf-java",
+          "version": {
+            "requires": "3.11.1"
+          }
+        },
+        {
+          "group": "com.google.protobuf",
+          "module": "protobuf-java-util",
+          "version": {
+            "requires": "3.11.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-netty-shaded",
+          "version": {
+            "requires": "1.31.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-protobuf",
+          "version": {
+            "requires": "1.31.1"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-stub",
+          "version": {
+            "requires": "1.31.1"
+          }
+        },
+        {
+          "group": "javax.annotation",
+          "module": "javax.annotation-api",
+          "version": {
+            "requires": "1.3.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "fabric-chaincode-protos-2.4.0-beta.jar",
+          "url": "fabric-chaincode-protos-2.4.0-beta.jar",
+          "size": 852875,
+          "sha512": "9aa620087154abb9a7a91b787bb5cc55a42324b36c055d8a58482c9127cc72da0a62f37a4b5d0240c6de6306162bffc9afee24ec87faa28b52dae1eb35c2c422",
+          "sha256": "616607f3ad0f42deb699c62c3c36b99798a352966827a29f260c21f3eb123746",
+          "sha1": "091e8c3635ae563b767b2bc7a25be65dac6af923",
+          "md5": "b5675357931646fbb37747c87e461ab2"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-protos-2.4.0-beta-javadoc.jar",
+          "url": "fabric-chaincode-protos-2.4.0-beta-javadoc.jar",
+          "size": 261,
+          "sha512": "9bdb729c7d18deffcc54da42fd8f2c2e59e58610285e88ab6f78ffb1eef4e9582613289f31c9cbd3d0ef66ddedca3544b1bd156a67edebe67b9cd21c723b7b69",
+          "sha256": "bc861117ca395fae4bc0552879bb040ca6854bb9c7ef860e3bb6e68356d737bb",
+          "sha1": "ac7304a2f089aa5a393d054bc7926e6ce7ac9025",
+          "md5": "ccd528eaecf3855a7f047608ee17cee5"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "fabric-chaincode-protos-2.4.0-beta-sources.jar",
+          "url": "fabric-chaincode-protos-2.4.0-beta-sources.jar",
+          "size": 177488,
+          "sha512": "e18e73d0f9acb8e4fe3e61b675f2b10e138a7d379d8479154e37a9f73bc5f47226986e2cb369ed147ab4f2e8e8697f0f6bd173b5457afb29408303b05258d45c",
+          "sha256": "0c65f407adffa272c99c5bc65acb5b778ed8900117a9a5074490bcf964683546",
+          "sha1": "173c5a12f34fda083c2f9a952886834dc489c5f5",
+          "md5": "baf770a64f34bc33c0fedb7d8cfb65e8"
+        }
+      ]
+    }
+  ]
+}

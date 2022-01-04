@@ -63,16 +63,25 @@ public class FabricServiceFactory {
     private Runnable grpcStateChange;
     @Inject
     TxRequestStore txStore;
+
+    // is this accepting requests?
+    private boolean running = false;
+
     public FabricServiceFactory() {
 
     }
-    public String checkTxId(String tx_id) {
-        TxRequestStore.Entry e = this.txStore.getEntry(tx_id);
+
+    public String checkTxId(String appRequestId) {
+        TxRequestStore.Entry e = this.txStore.getEntry(appRequestId);
         if (e == null) {
-            return "<No Record of that id>";
+            return "<No Record of that App Request Id>";
         } else {
             return e.toString();
         }
+    }
+
+    public String getAllRequests() {
+        return this.txStore.getAllEntries();
     }
 
     /**
@@ -80,31 +89,43 @@ public class FabricServiceFactory {
      */
     @PostConstruct
     public void setup() {
+        this.grpcChannel = createGrpcChannel();
+    }
 
+    private ManagedChannel createGrpcChannel() {
+        ManagedChannel grpcChannel;
         try {
+            LOG.info("Reading the tlsCert");
             Reader tlsCertReader;
             tlsCertReader = Files.newBufferedReader(Paths.get(tlsCertPath));
             X509Certificate tlsCert = Identities.readX509Certificate(tlsCertReader);
 
             // for non-tls use
             // NettyChannelBuilder.forTarget("digibankpeer-api.127-0-0-1.nip.io:8080").usePlaintext().build();
-            this.grpcChannel = NettyChannelBuilder.forTarget(hostport)
+            LOG.info("Using hostport " + hostport + " sslHostOverride=" + sslHostOverride);
+            grpcChannel = NettyChannelBuilder.forTarget(hostport)
                     .sslContext(GrpcSslContexts.forClient().trustManager(tlsCert).build())
                     .overrideAuthority(sslHostOverride).build();
 
+            grpcStateChange = () -> {
+                ConnectivityState newstate = grpcChannel.getState(false);
+                if (newstate == ConnectivityState.READY || newstate == ConnectivityState.IDLE) {
+                    this.running = true;
+                } else {
+                    this.running = false;
+                }
+                LOG.info(() -> "grpcChannel changed state " + newstate.toString());
+                LOG.info(() -> "grpcChannel authority " + grpcChannel.authority());
+                LOG.info(() -> "grpcChannel " + grpcChannel.toString());
+                grpcChannel.notifyWhenStateChanged(newstate, grpcStateChange);
+            };
 
-                    grpcStateChange = () -> {
-                        ConnectivityState newstate = this.grpcChannel.getState(false);
-                        LOG.info(() -> "grpcChannel changed state" + newstate.toString());
-                        this.grpcChannel.notifyWhenStateChanged(newstate, grpcStateChange);
-                    };
-        
-                    // bootstrap the grpcStateChange
-                    new Thread(grpcStateChange).start();
-            
+            // bootstrap the grpcStateChange
+            new Thread(grpcStateChange, "gRPC-state-watchdog").start();
+
             // setup the loading of the identities
             idWallet = new JsonIdAdapter(Paths.get(walletDir));
-            
+
             // create the executor thread pool for the async handling of tx submissions
             executor = Executors.newFixedThreadPool(10);
         } catch (IOException | CertificateException e) {
@@ -112,6 +133,7 @@ public class FabricServiceFactory {
             Quarkus.blockingExit();
             throw new RuntimeException("Failed to establish the gRPC connection", e);
         }
+        return grpcChannel;
 
     }
 
@@ -122,38 +144,41 @@ public class FabricServiceFactory {
         try {
             grpcChannel.awaitTermination(30, TimeUnit.SECONDS);
             LOG.info("termination completed");
-        } catch (InterruptedException ie){
+        } catch (InterruptedException ie) {
             LOG.severe("Got interrupted exception on gRPC shutdown");
         }
     }
 
-    
-
     /**
      * Get the service for ledgerable contract
+     * 
      * @param userid ID to use for connecting and signing
      * @return LedgerableEventService
+     * @throws FabricServiceException
      */
-    public LedgerableEventService getLedgerableService(String userid) {
-        LOG.info("getLedgerableService "+userid+" >>");
+    public LedgerableEventService getLedgerableService(String userid) throws FabricServiceException {
+        LOG.info("getLedgerableService " + userid + " >>");
+
+        if (!this.running) {
+            throw new FabricServiceException("Unable to accept requests yet", true);
+        }
+
         try {
             Identity id = idWallet.getIdentity(userid);
             Signer signer = idWallet.getSigner(userid);
             Gateway.Builder builder = Gateway.newInstance().identity(id).signer(signer).connection(grpcChannel);
 
-            LedgerableEventService les= (LedgerableEventService) new LedgerableEventService(txStore,executor).setGatewayBuilder(builder)
-                    .setContractName(contract).setNetworkChannel(channel);
-
-            
-            CompletableFuture.runAsync(()->{
-                les.fabricChaincodeEvents();
-            },this.executor);
+            LedgerableEventService les = (LedgerableEventService) new LedgerableEventService(txStore, executor)
+                    .setGatewayBuilder(builder).setContractName(contract).setNetworkChannel(channel);
+            les.startEvents();
             return les;
-        } catch (InvalidKeyException | CertificateException | IOException e) {
+        } catch (InvalidKeyException | CertificateException e) {
             LOG.severe("Failed to create gateway builder " + e.getMessage());
-            Quarkus.asyncExit(100);
-            
-            throw new RuntimeException("Failed to create gateway builder", e);
+            throw (FabricServiceException) new FabricServiceException("Failed to create gateway builder", false)
+                    .initCause(e);
+        } catch (IOException e) {
+            LOG.severe("Failed with error" + e.getMessage());
+            throw (FabricServiceException) new FabricServiceException("Unclear what to do", true).initCause(e);
         }
     }
 

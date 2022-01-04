@@ -3,6 +3,6 @@
  */
 
 import { EventContract } from './LedgerableEventContract';
-export { EventContract } from './LedgerableEventContract';
+import { ContractSupport } from './contract-support';
 
-export const contracts: any[] = [EventContract];
+export const contracts: any[] = [EventContract, ContractSupport];

@@ -7,7 +7,7 @@ data:
   mq.host: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
   mq.port: '30756'
   mq.channel: CLOUD.APP2.SVRCONN
-  mq.app.password: xxxxx
+  mq.app.password: AV3esqAtZMPOIlERxvCqPptdz6q2-MhxXirda1tNdn4K
   mq.app.user: ledgermsg
   mq.qm: mqfab
   mq.trade.offer.queue: queue:///DEV.QUEUE.2
@@ -21,7 +21,7 @@ data:
   MQ_HOST: mqfab-e9b3.qm.eu-gb.mq.appdomain.cloud
   MQ_PORT: '30756'
   MQ_CHANNEL: CLOUD.APP2.SVRCONN
-  MQ_APP_PASSWORD: xxxxxx
+  MQ_APP_PASSWORD: AV3esqAtZMPOIlERxvCqPptdz6q2-MhxXirda1tNdn4K
   MQ_APP_USER: ledgermsg
   MQ_QM: mqfab
   MQ_TRADE_OFFER_QUEUE: queue:///DEV.QUEUE.2

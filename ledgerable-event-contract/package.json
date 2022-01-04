@@ -7,20 +7,25 @@
   "engines": {
     "node": ">=12.16.1"
   },
-  "fabric":{
+  "fabric": {
     "files": [
       "lib/**/*"
     ],
-    "label":"ledgerable"
+    "label": "ledgerable",
+    "connection": {
+      "address": "org1-cc-ledgerable-event-contract:9999",
+      "dial_timeout": "10s",
+      "tls_required": false
+    }
   },
   "scripts": {
     "clean": "rimraf lib",
     "format": "prettier --write \"{src,test}/**/*.ts\"",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
     "build": "npm run format && npm run clean && npm run lint && echo Using TypeScript && tsc --version && tsc --pretty && npm link",
-    "start": "fabric-chaincode-node start",
+    "start": "set -x && fabric-chaincode-node start",
     "md": "fabric-chaincode-node metadata generate",
-    "package": "npm run build && npm shrinkwrap",
+    "package": "docker build -f ./Dockerfile .",
     "start:server-nontls": "set -x && fabric-chaincode-node server --chaincode-address=$CHAINCODE_SERVER_ADDRESS --chaincode-id=$CHAINCODE_ID",
     "start:server": "set -x && fabric-chaincode-node server --chaincode-address=$CHAINCODE_SERVER_ADDRESS --chaincode-id=$CHAINCODE_ID --chaincode-tls-key-file=/hyperledger/privatekey.pem --chaincode-tls-client-cacert-file=/hyperledger/rootcert.pem --chaincode-tls-cert-file=/hyperledger/cert.pem"
   },
@@ -28,10 +33,13 @@
   "author": "John Doe",
   "license": "Apache-2.0",
   "dependencies": {
+    "@types/long": "^4.0.1",
     "@types/source-map-support": "^0.5.4",
-    "fabric-contract-api": "2.2.2",
-    "fabric-shim": "2.2.2",
-		"@types/long": "^4.0.1",
+    "fabric-contract-api": "file:fabric-contract-api-2.4.0-beta.tgz",
+    "fabric-ledger": "file:fabric-ledger-2.4.0-beta.tgz",
+    "fabric-shim": "file:fabric-shim-2.4.0-beta.tgz",
+    "fabric-shim-api": "file:fabric-shim-api-2.4.0-beta.tgz",
+    "fabric-shim-crypto": "file:fabric-shim-crypto-2.4.0-beta.tgz",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {

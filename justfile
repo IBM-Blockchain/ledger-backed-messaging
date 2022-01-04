@@ -4,6 +4,7 @@ docker_registry := "localhost:5000"
 build:
 	cd apps/LedgerMessaging; ./gradlew build -x test
 	cd apps/TradingEngine; ./gradlew build -x test
+	cd apps/ManualEventSubmitter; npm install
 
 docker:
 	docker build -t trade-dashboard ./apps/Dashboard
@@ -17,6 +18,7 @@ docker:
 	docker push {{docker_registry}}/tradeengine:latest
 
 k8s:
+	cd k8s-deployment/mongodb; kubectl apply -f . 
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/mq-config-map.yaml
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/trade-dashboard.yaml
 	kubectl -n {{k8s_namespace}} apply -f k8s-deployment/trade-engine.yaml
@@ -24,3 +26,11 @@ k8s:
 	kubectl -n {{k8s_namespace}} rollout status deploy/trade-engine
 	kubectl -n {{k8s_namespace}} rollout status deploy/ledger-messaging
 	kubectl -n {{k8s_namespace}} rollout status deploy/trade-dashboard
+
+chaincode:
+	docker build -t ledgerable-event-contract:latest ./ledgerable-event-contract
+	docker tag ledgerable-event-contract:latest {{docker_registry}}/ledgerable-event-contract:latest
+	docker push {{docker_registry}}/ledgerable-event-contract:latest
+
+test:
+	cd apps/ManualEventSubmitter; npm test

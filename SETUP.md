@@ -116,7 +116,7 @@ To validate that everything is setup
 ./network chaincode metadata
 ```
 
-You should see some JSON output here... that's the metadata description of the contract.
+You should see so./netwme JSON output here... that's the metadata description of the contract.
 If you have `jq` installed, pipe the output to JQ to get a clearer view of what the contract offers.
 
 > A K8S cluster is now setup, with a fabric infrstructure running, with a smart contract installed

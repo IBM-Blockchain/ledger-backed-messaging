@@ -7,6 +7,7 @@ WORKDIR /usr/src/app
 
 # Copy node.js source and build, changing owner as well
 COPY --chown=node:node . /usr/src/app
+COPY --chown=node:node *.tgz ./
 RUN npm ci && npm run package
 
 # Bundle app source
@@ -25,6 +26,7 @@ COPY --chown=node:node --from=builder /usr/src/app/dist ./dist
 COPY --chown=node:node --from=builder /usr/src/app/package.json ./
 COPY --chown=node:node --from=builder /usr/src/app/npm-shrinkwrap.json ./
 COPY --chown=node:node docker/docker-entrypoint.sh /usr/src/app/docker-entrypoint.sh
+COPY --chown=node:node *.tgz ./
 RUN npm ci --only=production
 
 ENV PORT 9999

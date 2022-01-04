@@ -11,16 +11,23 @@ repositories {
     }
 }
 
-dependencies {
+dependencies { 
+    implementation 'io.quarkus:quarkus-mongodb-client'
+   
+    implementation 'org.hyperledger.fabric:fabric-gateway:0.1.0-dev-20211027-6'
     implementation 'io.quarkus:quarkus-container-image-docker'
-    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}") {
+        exclude group: 'com.google.protobuf'
+        exclude group: 'io.grpc'
+        
+    }
     implementation 'io.quarkus:quarkus-resteasy-jsonb'
     implementation 'io.quarkus:quarkus-resteasy'
     implementation 'io.quarkus:quarkus-arc'
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
     implementation 'com.ibm.mq:com.ibm.mq.allclient:9.2.0.0'
-    implementation 'org.hyperledger.fabric:fabric-gateway:0.1.0-dev-20211021-4'
+
 }
 
 group 'my-groupId'
